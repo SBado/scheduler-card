@@ -235,6 +235,10 @@
             "heading": "Show toggle switches",
             "description": "Show toggle switch for each individual schedule in the card"
           },
+          "today_only": {
+            "heading": "Today only",
+            "description": "Only show today's schedules"
+          },
           "tags": {
             "heading": "Tags",
             "description": "Use tags to divide schedules between multiple cards"
