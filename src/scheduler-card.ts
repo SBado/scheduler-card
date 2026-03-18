@@ -4,7 +4,15 @@ import { customElement, property, state } from 'lit/decorators';
 import { SchedulerDialogParams } from './dialogs/dialog-scheduler-editor';
 import { fetchItems } from './data/store/fetch_items';
 import { UnsubscribeFunc } from 'home-assistant-js-websocket';
-import { CardConfig, CustomConfig, EditorMode, Schedule, SchedulerEventData, ScheduleStorageEntry } from './types';
+import {
+  CardConfig,
+  CustomConfig,
+  EditorMode,
+  Schedule,
+  SchedulerEventData,
+  ScheduleStorageEntry,
+  TWeekday,
+} from './types';
 import { parseTimeBar } from './data/time/parse_time_bar';
 import { HomeAssistant } from './lib/types';
 import { CARD_VERSION, defaultSingleTimerConfig, defaultTimeSchemeConfig } from './const';
@@ -12,6 +20,7 @@ import { validateConfig } from './data/validate_config';
 import { localize } from './localize/localize';
 import { isIncludedSchedule } from './data/schedule/is_included_schedule';
 import { sortSchedules } from './data/schedule/sort_schedules';
+import { scheduleRunsToday } from './data/schedule/runs_today';
 import { fetchScheduleItem } from './data/store/fetch_item';
 import { fireEvent } from './lib/fire_event';
 import { hassLocalize } from './localize/hassLocalize';
@@ -138,6 +147,7 @@ export class SchedulerCard extends LitElement {
   render() {
     let items: ScheduleStorageEntry[] = [...(this.schedules || [])];
     let includedItems = items.filter((e) => isIncludedSchedule(e, this._config));
+    if (this._config.today_only) includedItems = includedItems.filter((e) => scheduleRunsToday(e));
     let excludedItems = items.filter((e) => !isIncludedSchedule(e, this._config));
 
     const headerToggleState = this.showDiscovered
@@ -148,37 +158,65 @@ export class SchedulerCard extends LitElement {
       <ha-card>
         <div class="card-header">
           <div class="name">
-            ${
-              !isDefined(this._config.title) || (typeof this._config.title === 'boolean' && this._config.title)
-                ? localize('ui.panel.common.title', this.hass)
-                : typeof this._config.title == 'boolean'
-                  ? ''
-                  : this._config.title
-            }
+            ${!isDefined(this._config.title) || (typeof this._config.title === 'boolean' && this._config.title)
+              ? localize('ui.panel.common.title', this.hass)
+              : typeof this._config.title == 'boolean'
+                ? ''
+                : this._config.title}
           </div>
 
-          ${
-            Object.keys(this.schedules || {}).length && this._config.show_header_toggle
-              ? html` <ha-switch ?checked=${headerToggleState} @change=${this.toggleDisableAll}> </ha-switch> `
-              : ''
-          }
+          ${Object.keys(this.schedules || {}).length && this._config.show_header_toggle
+            ? html` <ha-switch ?checked=${headerToggleState} @change=${this.toggleDisableAll}> </ha-switch> `
+            : ''}
         </div>
 
         <div class="card-content" id="states">
-          ${
-            this.connectionError
+          ${this.connectionError
+            ? html`
+                <div>
+                  <hui-warning .hass=${this.hass}>
+                    <span style="white-space: normal"> ${localize('ui.panel.overview.backend_error', this.hass)} </span>
+                  </hui-warning>
+                </div>
+              `
+            : !Object.keys(items).length
+              ? html` <div>${localize('ui.panel.overview.no_entries', this.hass)}</div> `
+              : includedItems.map(
+                  (scheduleItem) => html`
+                    <scheduler-item-row
+                      .hass=${this.hass}
+                      .config=${this._config}
+                      .schedule_id=${scheduleItem.schedule_id}
+                      .schedule=${scheduleItem}
+                      @editClick=${(ev: Event) => {
+                        this._handleEditClick(ev, scheduleItem);
+                      }}
+                    >
+                    </scheduler-item-row>
+                  `
+                )}
+          ${Object.keys(items).length > includedItems.length && this._config.discover_existing !== false
+            ? !this.showDiscovered
               ? html`
                   <div>
-                    <hui-warning .hass=${this.hass}>
-                      <span style="white-space: normal">
-                        ${localize('ui.panel.overview.backend_error', this.hass)}
-                      </span>
-                    </hui-warning>
+                    <ha-button
+                      appearance="plain"
+                      @click=${() => {
+                        this.showDiscovered = true;
+                      }}
+                    >
+                      +
+                      ${localize(
+                        'ui.panel.overview.excluded_items',
+                        this.hass,
+                        '{number}',
+                        Object.keys(items).length - includedItems.length
+                      )}
+                    </ha-button>
                   </div>
                 `
-              : !Object.keys(items).length
-                ? html` <div>${localize('ui.panel.overview.no_entries', this.hass)}</div> `
-                : includedItems.map(
+              : html`
+                  ${excludedItems.map(
                     (scheduleItem) => html`
                       <scheduler-item-row
                         .hass=${this.hass}
@@ -191,73 +229,36 @@ export class SchedulerCard extends LitElement {
                       >
                       </scheduler-item-row>
                     `
-                  )
-          }
-          ${
-            Object.keys(items).length > includedItems.length && this._config.discover_existing !== false
-              ? !this.showDiscovered
+                  )}
+
+                  <div>
+                    <ha-button
+                      appearance="plain"
+                      @click=${() => {
+                        this.showDiscovered = false;
+                      }}
+                    >
+                      ${localize('ui.panel.overview.hide_excluded', this.hass)}
+                    </ha-button>
+                  </div>
+                `
+            : ''}
+        </div>
+        ${this._config.show_add_button !== false
+          ? html` <div class="card-actions">
+              ${this.connectionError
                 ? html`
-                    <div>
-                      <ha-button
-                        appearance="plain"
-                        @click=${() => {
-                          this.showDiscovered = true;
-                        }}
-                      >
-                        +
-                        ${localize('ui.panel.overview.excluded_items', this.hass, '{number}', Object.keys(items).length - includedItems.length)}
-                      </ha-button>
-                    </div>
+                    <ha-button appearance="plain" variant="warning" @click=${this._retryConnection}
+                      >${hassLocalize('ui.common.refresh', this.hass)}
+                    </ha-button>
                   `
                 : html`
-                    ${excludedItems.map(
-                      (scheduleItem) => html`
-                        <scheduler-item-row
-                          .hass=${this.hass}
-                          .config=${this._config}
-                          .schedule_id=${scheduleItem.schedule_id}
-                          .schedule=${scheduleItem}
-                          @editClick=${(ev: Event) => {
-                            this._handleEditClick(ev, scheduleItem);
-                          }}
-                        >
-                        </scheduler-item-row>
-                      `
-                    )}
-
-                    <div>
-                      <ha-button
-                        appearance="plain"
-                        @click=${() => {
-                          this.showDiscovered = false;
-                        }}
-                      >
-                        ${localize('ui.panel.overview.hide_excluded', this.hass)}
-                      </ha-button>
-                    </div>
-                  `
-              : ''
-          }
-        </div>
-        ${
-          this._config.show_add_button !== false
-            ? html` <div class="card-actions">
-                ${
-                  this.connectionError
-                    ? html`
-                        <ha-button appearance="plain" variant="warning" @click=${this._retryConnection}
-                          >${hassLocalize('ui.common.refresh', this.hass)}
-                        </ha-button>
-                      `
-                    : html`
-                        <ha-button appearance="plain" @click=${this._addClick}
-                          >${hassLocalize('ui.common.add', this.hass)}
-                        </ha-button>
-                      `
-                }
-              </div>`
-            : ''
-        }
+                    <ha-button appearance="plain" @click=${this._addClick}
+                      >${hassLocalize('ui.common.add', this.hass)}
+                    </ha-button>
+                  `}
+            </div>`
+          : ''}
       </ha-card>
     `;
   }

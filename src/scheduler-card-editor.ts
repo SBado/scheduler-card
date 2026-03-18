@@ -109,12 +109,24 @@ export class SchedulerCardEditor extends LitElement {
               ></ha-switch>
             </ha-formfield>
           </div>
+        </div>
+        <div class="two-columns" style="margin: 10px 0px 15px 0px">
           <div class="column">
             <ha-formfield label="${localize('ui.panel.card_editor.fields.show_toggle_switches.heading', this.hass)}">
               <ha-switch
                 ?checked=${this._config.show_toggle_switches !== false}
                 @change=${(ev: Event) => {
                   this._updateConfig({ show_toggle_switches: (ev.target as HTMLInputElement).checked });
+                }}
+              ></ha-switch>
+            </ha-formfield>
+          </div>
+          <div class="column">
+            <ha-formfield label="${localize('ui.panel.card_editor.fields.today_only.heading', this.hass)}">
+              <ha-switch
+                ?checked=${this._config.today_only}
+                @change=${(ev: Event) => {
+                  this._updateConfig({ today_only: (ev.target as HTMLInputElement).checked });
                 }}
               ></ha-switch>
             </ha-formfield>
@@ -173,7 +185,9 @@ export class SchedulerCardEditor extends LitElement {
             }}
           >
             <ha-icon
-              icon="${[this._config.sort_by || DEFAULT_SORT_BY].flat().includes('relative-time') ? 'mdi:radiobox-marked' : 'mdi:radiobox-blank'}"
+              icon="${[this._config.sort_by || DEFAULT_SORT_BY].flat().includes('relative-time')
+                ? 'mdi:radiobox-marked'
+                : 'mdi:radiobox-blank'}"
               class="${[this._config.sort_by || DEFAULT_SORT_BY].flat().includes('relative-time') ? 'checked' : ''}"
             ></ha-icon>
             <span>${localize('ui.panel.card_editor.fields.sort_by.options.relative_time', this.hass)}</span>
@@ -185,7 +199,9 @@ export class SchedulerCardEditor extends LitElement {
             }}
           >
             <ha-icon
-              icon="${[this._config.sort_by || DEFAULT_SORT_BY].flat().includes('title') ? 'mdi:radiobox-marked' : 'mdi:radiobox-blank'}"
+              icon="${[this._config.sort_by || DEFAULT_SORT_BY].flat().includes('title')
+                ? 'mdi:radiobox-marked'
+                : 'mdi:radiobox-blank'}"
               class="${[this._config.sort_by || DEFAULT_SORT_BY].flat().includes('title') ? 'checked' : ''}"
             ></ha-icon>
             <span>${localize('ui.panel.card_editor.fields.sort_by.options.title', this.hass)}</span>
@@ -202,8 +218,16 @@ export class SchedulerCardEditor extends LitElement {
             }}
           >
             <ha-icon
-              icon="${[this._config.display_options?.primary_info || DEFAULT_PRIMARY_INFO_DISPLAY].flat().includes('default') ? 'mdi:radiobox-marked' : 'mdi:radiobox-blank'}"
-              class="${[this._config.display_options?.primary_info || DEFAULT_PRIMARY_INFO_DISPLAY].flat().includes('default') ? 'checked' : ''}"
+              icon="${[this._config.display_options?.primary_info || DEFAULT_PRIMARY_INFO_DISPLAY]
+                .flat()
+                .includes('default')
+                ? 'mdi:radiobox-marked'
+                : 'mdi:radiobox-blank'}"
+              class="${[this._config.display_options?.primary_info || DEFAULT_PRIMARY_INFO_DISPLAY]
+                .flat()
+                .includes('default')
+                ? 'checked'
+                : ''}"
             ></ha-icon>
             <span>${localize('ui.panel.card_editor.fields.display_format_primary.options.default', this.hass)}</span>
           </div>
@@ -214,8 +238,16 @@ export class SchedulerCardEditor extends LitElement {
             }}
           >
             <ha-icon
-              icon="${[this._config.display_options?.primary_info || DEFAULT_PRIMARY_INFO_DISPLAY].flat().includes('{entity}: {action}') ? 'mdi:radiobox-marked' : 'mdi:radiobox-blank'}"
-              class="${[this._config.display_options?.primary_info || DEFAULT_PRIMARY_INFO_DISPLAY].flat().includes('{entity}: {action}') ? 'checked' : ''}"
+              icon="${[this._config.display_options?.primary_info || DEFAULT_PRIMARY_INFO_DISPLAY]
+                .flat()
+                .includes('{entity}: {action}')
+                ? 'mdi:radiobox-marked'
+                : 'mdi:radiobox-blank'}"
+              class="${[this._config.display_options?.primary_info || DEFAULT_PRIMARY_INFO_DISPLAY]
+                .flat()
+                .includes('{entity}: {action}')
+                ? 'checked'
+                : ''}"
             ></ha-icon>
             <span
               >${localize('ui.panel.card_editor.fields.display_format_primary.options.entity_action', this.hass)}</span
@@ -227,12 +259,17 @@ export class SchedulerCardEditor extends LitElement {
         <div class="two-columns">
           <div class="column">
             <ha-formfield
-              label="${localize('ui.panel.card_editor.fields.display_format_secondary.options.relative_time', this.hass)}"
+              label="${localize(
+                'ui.panel.card_editor.fields.display_format_secondary.options.relative_time',
+                this.hass
+              )}"
             >
               <ha-checkbox
                 value="relative-time"
                 @change=${this._setDisplayOptionsSecondary}
-                ?checked=${[this._config.display_options?.secondary_info || DEFAULT_SECONDARY_INFO_DISPLAY].flat().includes('relative-time')}
+                ?checked=${[this._config.display_options?.secondary_info || DEFAULT_SECONDARY_INFO_DISPLAY]
+                  .flat()
+                  .includes('relative-time')}
               >
               </ha-checkbox>
             </ha-formfield>
@@ -243,7 +280,9 @@ export class SchedulerCardEditor extends LitElement {
               <ha-checkbox
                 value="time"
                 @change=${this._setDisplayOptionsSecondary}
-                ?checked=${[this._config.display_options?.secondary_info || DEFAULT_SECONDARY_INFO_DISPLAY].flat().includes('time')}
+                ?checked=${[this._config.display_options?.secondary_info || DEFAULT_SECONDARY_INFO_DISPLAY]
+                  .flat()
+                  .includes('time')}
               >
               </ha-checkbox>
             </ha-formfield>
@@ -255,18 +294,25 @@ export class SchedulerCardEditor extends LitElement {
               <ha-checkbox
                 value="days"
                 @change=${this._setDisplayOptionsSecondary}
-                ?checked=${[this._config.display_options?.secondary_info || DEFAULT_SECONDARY_INFO_DISPLAY].flat().includes('days')}
+                ?checked=${[this._config.display_options?.secondary_info || DEFAULT_SECONDARY_INFO_DISPLAY]
+                  .flat()
+                  .includes('days')}
               >
               </ha-checkbox>
             </ha-formfield>
 
             <ha-formfield
-              label="${localize('ui.panel.card_editor.fields.display_format_secondary.options.additional_tasks', this.hass)}"
+              label="${localize(
+                'ui.panel.card_editor.fields.display_format_secondary.options.additional_tasks',
+                this.hass
+              )}"
             >
               <ha-checkbox
                 value="additional-tasks"
                 @change=${this._setDisplayOptionsSecondary}
-                ?checked=${[this._config.display_options?.secondary_info || DEFAULT_SECONDARY_INFO_DISPLAY].flat().includes('additional-tasks')}
+                ?checked=${[this._config.display_options?.secondary_info || DEFAULT_SECONDARY_INFO_DISPLAY]
+                  .flat()
+                  .includes('additional-tasks')}
               >
               </ha-checkbox>
             </ha-formfield>
