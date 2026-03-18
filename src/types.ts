@@ -17,6 +17,7 @@ export interface CardConfig {
   tags?: string[] | string;
   exclude_tags?: string[] | string;
   show_add_button?: boolean;
+  today_only?: boolean;
 }
 
 export enum EditorMode {
