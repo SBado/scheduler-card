@@ -20,7 +20,7 @@ import { validateConfig } from './data/validate_config';
 import { localize } from './localize/localize';
 import { isIncludedSchedule } from './data/schedule/is_included_schedule';
 import { sortSchedules } from './data/schedule/sort_schedules';
-import { scheduleRunsToday } from './data/schedule/runs_today';
+import { scheduleRunsOnDay } from './data/schedule/runs_on_day';
 import { fetchScheduleItem } from './data/store/fetch_item';
 import { fireEvent } from './lib/fire_event';
 import { hassLocalize } from './localize/hassLocalize';
@@ -41,6 +41,8 @@ export class SchedulerCard extends LitElement {
   @state() public schedules?: ScheduleStorageEntry[];
 
   @state() showDiscovered: boolean = false;
+
+  @state() private _dayOffset: number = 0;
 
   translationsLoaded = false;
   connectionError = false;
@@ -144,10 +146,24 @@ export class SchedulerCard extends LitElement {
     return true;
   }
 
+  private get _selectedJsDay(): number {
+    return ((new Date().getDay() + this._dayOffset) % 7 + 7) % 7;
+  }
+
+  private get _selectedDayName(): string {
+    const date = new Date();
+    date.setDate(date.getDate() + this._dayOffset);
+    return date.toLocaleDateString(this.hass?.language || 'en', { weekday: 'long' });
+  }
+
+  private _shiftDay(delta: -1 | 1) {
+    this._dayOffset = ((this._dayOffset + delta) % 7 + 7) % 7;
+  }
+
   render() {
     let items: ScheduleStorageEntry[] = [...(this.schedules || [])];
     let includedItems = items.filter((e) => isIncludedSchedule(e, this._config));
-    if (this._config.today_only) includedItems = includedItems.filter((e) => scheduleRunsToday(e));
+    if (this._config.today_only) includedItems = includedItems.filter((e) => scheduleRunsOnDay(e, this._selectedJsDay));
     let excludedItems = items.filter((e) => !isIncludedSchedule(e, this._config));
 
     const headerToggleState = this.showDiscovered
@@ -159,106 +175,124 @@ export class SchedulerCard extends LitElement {
         <div class="card-header">
           <div class="name">
             ${!isDefined(this._config.title) || (typeof this._config.title === 'boolean' && this._config.title)
-              ? localize('ui.panel.common.title', this.hass)
-              : typeof this._config.title == 'boolean'
-                ? ''
-                : this._config.title}
+        ? localize('ui.panel.common.title', this.hass)
+        : typeof this._config.title == 'boolean'
+          ? ''
+          : this._config.title}
           </div>
 
+            ${this._config.today_only
+        ? html`
+              <div class="day-picker">
+                <ha-icon-button
+                  .path=${'M15.41,16.58L10.83,12L15.41,7.41L14,6L8,12L14,18L15.41,16.58Z'}
+                  @click=${this._shiftDay.bind(this, -1)}
+                ></ha-icon-button>
+                <span class="day-name">${this._selectedDayName}</span>
+                <ha-icon-button
+                  .path=${'M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z'}
+                  @click=${this._shiftDay.bind(this, 1)}
+                ></ha-icon-button>
+              </div>
+            `
+        : ''}
+
           ${Object.keys(this.schedules || {}).length && this._config.show_header_toggle
-            ? html` <ha-switch ?checked=${headerToggleState} @change=${this.toggleDisableAll}> </ha-switch> `
-            : ''}
+        ? html` <ha-switch ?checked=${headerToggleState} @change=${this.toggleDisableAll}> </ha-switch> `
+        : ''}
         </div>
 
         <div class="card-content" id="states">
           ${this.connectionError
-            ? html`
+        ? html`
                 <div>
                   <hui-warning .hass=${this.hass}>
                     <span style="white-space: normal"> ${localize('ui.panel.overview.backend_error', this.hass)} </span>
                   </hui-warning>
                 </div>
               `
-            : !Object.keys(items).length
-              ? html` <div>${localize('ui.panel.overview.no_entries', this.hass)}</div> `
-              : includedItems.map(
-                  (scheduleItem) => html`
+        : !Object.keys(items).length
+          ? html` <div>${localize('ui.panel.overview.no_entries', this.hass)}</div> `
+          : includedItems.map(
+            (scheduleItem) => html`
                     <scheduler-item-row
                       .hass=${this.hass}
                       .config=${this._config}
                       .schedule_id=${scheduleItem.schedule_id}
                       .schedule=${scheduleItem}
+                      .selectedDay=${this._selectedJsDay}
                       @editClick=${(ev: Event) => {
-                        this._handleEditClick(ev, scheduleItem);
-                      }}
+                this._handleEditClick(ev, scheduleItem);
+              }}
                     >
                     </scheduler-item-row>
                   `
-                )}
+          )}
           ${Object.keys(items).length > includedItems.length && this._config.discover_existing !== false
-            ? !this.showDiscovered
-              ? html`
+        ? !this.showDiscovered
+          ? html`
                   <div>
                     <ha-button
                       appearance="plain"
                       @click=${() => {
-                        this.showDiscovered = true;
-                      }}
+              this.showDiscovered = true;
+            }}
                     >
                       +
                       ${localize(
-                        'ui.panel.overview.excluded_items',
-                        this.hass,
-                        '{number}',
-                        Object.keys(items).length - includedItems.length
-                      )}
+              'ui.panel.overview.excluded_items',
+              this.hass,
+              '{number}',
+              Object.keys(items).length - includedItems.length
+            )}
                     </ha-button>
                   </div>
                 `
-              : html`
+          : html`
                   ${excludedItems.map(
-                    (scheduleItem) => html`
+            (scheduleItem) => html`
                       <scheduler-item-row
                         .hass=${this.hass}
                         .config=${this._config}
                         .schedule_id=${scheduleItem.schedule_id}
                         .schedule=${scheduleItem}
+                        .selectedDay=${this._selectedJsDay}
                         @editClick=${(ev: Event) => {
-                          this._handleEditClick(ev, scheduleItem);
-                        }}
+                this._handleEditClick(ev, scheduleItem);
+              }}
                       >
                       </scheduler-item-row>
                     `
-                  )}
+          )}
 
                   <div>
                     <ha-button
                       appearance="plain"
                       @click=${() => {
-                        this.showDiscovered = false;
-                      }}
+              this.showDiscovered = false;
+            }}
                     >
                       ${localize('ui.panel.overview.hide_excluded', this.hass)}
                     </ha-button>
                   </div>
                 `
-            : ''}
+        : ''}
         </div>
         ${this._config.show_add_button !== false
-          ? html` <div class="card-actions">
+        ? html` <div class="card-actions">
               ${this.connectionError
-                ? html`
+            ? html`
                     <ha-button appearance="plain" variant="warning" @click=${this._retryConnection}
                       >${hassLocalize('ui.common.refresh', this.hass)}
                     </ha-button>
                   `
-                : html`
+            : html`
                     <ha-button appearance="plain" @click=${this._addClick}
                       >${hassLocalize('ui.common.add', this.hass)}
                     </ha-button>
                   `}
             </div>`
-          : ''}
+        : ''}
       </ha-card>
     `;
   }
@@ -402,7 +436,22 @@ export class SchedulerCard extends LitElement {
       margin: 0px 6px;
       line-height: 24px;
     }
-
+    .day-picker {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 16px 8px 16px;
+      gap: 8px;
+    }
+    .day-picker .day-name {
+      flex: 1;
+      text-align: center;
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--primary-text-color);
+      text-transform: capitalize;
+      margin-top: 0.5rem;
+    }
     #states > * {
       margin: 8px 0;
     }
