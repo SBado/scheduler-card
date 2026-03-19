@@ -53,12 +53,12 @@ export class SchedulerItemRow extends LitElement {
         </div>
         <div class="state">
           ${this.config.show_toggle_switches !== false
-          ? html`<ha-switch
+            ? html`<ha-switch
                 ?checked=${['on', 'triggered'].includes(stateObj.state || '')}
                 ?disabled=${stateObj.state == 'completed'}
                 @click=${this._toggleEnableDisable}
               ></ha-switch>`
-          : ''}
+            : ''}
         </div>
       `;
     } catch (e) {
@@ -112,22 +112,22 @@ export class SchedulerItemRow extends LitElement {
       <div class="timeline-wrap">
         <div class="timeline-bar">
           ${segments.map(
-      (seg, i) => html`
+            (seg, i) => html`
               <div
                 class="timeline-seg ${seg.isActive ? 'active' : ''} ${!seg.hasAction ? 'no-action' : ''}"
                 style="
                   width: ${seg.widthPct.toFixed(2)}%;
                   background: ${seg.hasAction ? COLORS[i % COLORS.length] : 'var(--disabled-text-color, #9e9e9e)'};
                   ${seg.isActive
-          ? 'outline: 2px solid var(--primary-color); outline-offset: -2px; opacity: 1;'
-          : 'opacity: 0.72;'}
+                  ? 'outline: 2px solid var(--primary-color); outline-offset: -2px; opacity: 1;'
+                  : 'opacity: 0.72;'}
                 "
                 title="${slot_label(seg.actionLabel, seg.start, seg.end)}"
               >
                 ${seg.widthPct > 9 ? seg.actionLabel : ''}
               </div>
             `
-    )}
+          )}
           ${isToday && !disabled ? html`<div class="timeline-now" style="left: ${nowPct.toFixed(2)}%"></div>` : nothing}
         </div>
         <div class="timeline-labels">
