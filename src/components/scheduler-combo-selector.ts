@@ -146,7 +146,9 @@ export class SchedulerComboSelector extends LitElement {
               compact
               @clear=${_clearValue}
               .disabled=${this.disabled}
-              .hideClearIcon=${this.disabled || !isDefined(this.value) || (Array.isArray(this.value) && !this.value.length)}
+              .hideClearIcon=${this.disabled ||
+              !isDefined(this.value) ||
+              (Array.isArray(this.value) && !this.value.length)}
               .value=${value}
               .icon=${selectedOption?.icon}
             >
@@ -177,6 +179,16 @@ export class SchedulerComboSelector extends LitElement {
         ev.stopPropagation();
       };
 
+      const nudgeValue = (delta: number) => {
+        let current = Number(value);
+        let next = roundFloat(current + delta);
+        if (isDefined(config.min) && next < config.min!) next = config.min!;
+        if (isDefined(config.max) && next > config.max!) next = config.max!;
+        let fireVal = next;
+        if (typeof config.scale_factor == 'number') fireVal = roundFloat(next * config.scale_factor);
+        this._valueChanged(new CustomEvent('value-changed', { detail: { value: fireVal } }));
+      };
+
       const boxValueChanged = (ev: InputEvent) => {
         ev.stopPropagation();
         const input = (ev.target as HTMLInputElement).value;
@@ -200,37 +212,51 @@ export class SchedulerComboSelector extends LitElement {
 
       return html`
         <div class="slider-wrapper">
-          ${
-            boxMode
-              ? html`
-                  <ha-input
-                    .inputMode=${config.step && Number(config.step) % 1 == 0 ? 'numeric' : 'decimal'}
-                    .min=${config.min}
-                    .max=${config.max}
-                    .value=${value || ''}
-                    .step=${config.step ?? 1}
-                    .disabled=${this.disabled}
-                    .required=${true}
-                    .suffix=${config.unit}
-                    type="number"
-                    autoValidate
-                    .validityTransform=${validateBoxInput}
-                    @input=${boxValueChanged}
-                  >
-                  </ha-input>
-                `
-              : html`
-                  <ha-slider
-                    .min=${config.min}
-                    .max=${config.max}
-                    .step=${config.step || 1}
-                    .value=${value}
-                    @change=${sliderValueChanged}
-                    ?disabled=${this.disabled}
-                  ></ha-slider>
-                  <span class="value">${value} ${config.unit || ''}</span>
-                `
-          }
+          ${boxMode
+            ? html`
+                <ha-input
+                  .inputMode=${config.step && Number(config.step) % 1 == 0 ? 'numeric' : 'decimal'}
+                  .min=${config.min}
+                  .max=${config.max}
+                  .value=${value || ''}
+                  .step=${config.step ?? 1}
+                  .disabled=${this.disabled}
+                  .required=${true}
+                  .suffix=${config.unit}
+                  type="number"
+                  autoValidate
+                  .validityTransform=${validateBoxInput}
+                  @input=${boxValueChanged}
+                >
+                </ha-input>
+              `
+            : html`
+                <ha-slider
+                  .min=${config.min}
+                  .max=${config.max}
+                  .step=${config.step || 1}
+                  .value=${value}
+                  @change=${sliderValueChanged}
+                  ?disabled=${this.disabled}
+                ></ha-slider>
+                <button
+                  class="nudge-btn"
+                  ?disabled=${this.disabled}
+                  @click=${() => nudgeValue(-(config.step || 1))}
+                  title="-${config.step || 1}"
+                >
+                  −
+                </button>
+                <span class="value">${value} ${config.unit || ''}</span>
+                <button
+                  class="nudge-btn"
+                  ?disabled=${this.disabled}
+                  @click=${() => nudgeValue(+(config.step || 1))}
+                  title="+${config.step || 1}"
+                >
+                  +
+                </button>
+              `}
         </div>
       `;
     } else if ((this.config as StringSelector).text) {
@@ -325,6 +351,30 @@ export class SchedulerComboSelector extends LitElement {
     }
     ha-dropdown::part(menu) {
       min-width: var(--select-menu-width);
+    }
+    button.nudge-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      flex-shrink: 0;
+      border: 1px solid var(--divider-color, #e0e0e0);
+      border-radius: 50%;
+      background: var(--card-background-color, #fff);
+      color: var(--primary-text-color);
+      font-size: 1.1rem;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0;
+      transition: background 0.15s;
+    }
+    button.nudge-btn:hover:not([disabled]) {
+      background: var(--secondary-background-color, #f5f5f5);
+    }
+    button.nudge-btn[disabled] {
+      opacity: 0.4;
+      cursor: default;
     }
   `;
 
