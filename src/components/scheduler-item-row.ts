@@ -18,6 +18,7 @@ export class SchedulerItemRow extends LitElement {
   @property() schedule_id!: string;
   @property() schedule!: Schedule;
   @property() config!: CardConfig;
+  @property({ type: Number }) selectedDay: number = new Date().getDay();
 
   render() {
     try {
@@ -94,12 +95,13 @@ export class SchedulerItemRow extends LitElement {
     const now = new Date();
     const nowMins = now.getHours() * 60 + now.getMinutes();
     const nowPct = (nowMins / TOTAL_MINS) * 100;
+    const isToday = this.selectedDay === now.getDay();
 
     const segments = slots.map((slot, i) => {
       const start = toMins(slot.start);
       const end = i < slots.length - 1 ? toMins(slots[i + 1].start) : TOTAL_MINS;
       const widthPct = ((end - start) / TOTAL_MINS) * 100;
-      const isActive = !disabled && nowMins >= start && nowMins < end;
+      const isActive = isToday && !disabled && nowMins >= start && nowMins < end;
       const action = slot.actions?.[0];
       const shortLabel = action ? formatActionDisplay(action, this.hass, this.config.customize, true) : '';
       const actionLabel = shortLabel || action?.service?.split('.').pop() || '';
@@ -126,7 +128,7 @@ export class SchedulerItemRow extends LitElement {
               </div>
             `
     )}
-          ${!disabled ? html`<div class="timeline-now" style="left: ${nowPct.toFixed(2)}%"></div>` : nothing}
+          ${isToday && !disabled ? html`<div class="timeline-now" style="left: ${nowPct.toFixed(2)}%"></div>` : nothing}
         </div>
         <div class="timeline-labels">
           <span>00:00</span>
