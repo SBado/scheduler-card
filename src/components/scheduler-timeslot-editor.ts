@@ -115,43 +115,45 @@ export class SchedulerTimeslotEditor extends LitElement {
 
       return html`
         <div
-          class="slot ${this.selectedSlot == i ? 'selected' : ''} ${slot.actions.length ? '' : 'empty'} ${slot.stop === undefined ? 'short' : ''}"
+          class="slot ${this.selectedSlot == i ? 'selected' : ''} ${slot.actions.length ? '' : 'empty'} ${slot.stop ===
+          undefined
+            ? 'short'
+            : ''}"
           style="${styleMap({ width: `${slotWidths[i]}px` })}"
           @click=${this._toggleSelectTimeslot}
           idx="${i}"
         >
-          ${
-            slot.stop || 1 == 1 ? '' : html` <div class="marker" @click=${this._toggleSelectTimeslot} idx="${i}"></div>`
-          }
-          ${
-            slot.actions.length
-              ? actionText && (slotWidth > textWidth / 3 || slotWidth > 50) && slotWidth > 30
-                ? html`<span style="margin-left: ${leftMargin}px; margin-right: ${rightMargin}px">${actionText}</span>`
-                : slotWidth > 16
-                  ? html`<ha-icon icon="${computeActionIcon(slot.actions[0], this.config.customize)}"></ha-icon>`
-                  : ''
-              : ''
-          }
+          ${slot.stop || 1 == 1
+            ? ''
+            : html` <div class="marker" @click=${this._toggleSelectTimeslot} idx="${i}"></div>`}
+          ${slot.actions.length
+            ? actionText && (slotWidth > textWidth / 3 || slotWidth > 50) && slotWidth > 30
+              ? html`<span style="margin-left: ${leftMargin}px; margin-right: ${rightMargin}px">${actionText}</span>`
+              : slotWidth > 16
+                ? html`<ha-icon icon="${computeActionIcon(slot.actions[0], this.config.customize)}"></ha-icon>`
+                : ''
+            : ''}
         </div>
-        ${
-          i < slots.length - 1 && slot.stop
-            ? html`
-                <div
-                  idx="${i}"
-                  class="handle ${this.selectedSlot == i + 1 || this.selectedSlot == i ? '' : 'hidden'} ${nextSlot && !nextSlot.stop ? 'center' : ''}"
-                >
-                  <span>
-                    <ha-icon-button
-                      .path=${mdiUnfoldMoreVertical}
-                      @mousedown=${this._handleDragStart}
-                      @touchstart=${this._handleDragStart}
-                    >
-                    </ha-icon-button>
-                  </span>
-                </div>
-              `
-            : ''
-        }
+        ${i < slots.length - 1 && slot.stop
+          ? html`
+              <div
+                idx="${i}"
+                class="handle ${this.selectedSlot == i + 1 || this.selectedSlot == i ? '' : 'hidden'} ${nextSlot &&
+                !nextSlot.stop
+                  ? 'center'
+                  : ''}"
+              >
+                <span>
+                  <ha-icon-button
+                    .path=${mdiUnfoldMoreVertical}
+                    @mousedown=${this._handleDragStart}
+                    @touchstart=${this._handleDragStart}
+                  >
+                  </ha-icon-button>
+                </span>
+              </div>
+            `
+          : ''}
       `;
     });
   }
@@ -434,8 +436,8 @@ export class SchedulerTimeslotEditor extends LitElement {
       }
       .handle ha-icon-button {
         --mdc-icon-button-size: 36px;
-        margin-top: -12px;
-        margin-left: -12px;
+        margin-top: -8px;
+        margin-left: -8px;
       }
       .handle.center span {
         margin-right: -2px;
