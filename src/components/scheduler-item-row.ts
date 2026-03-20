@@ -105,19 +105,20 @@ export class SchedulerItemRow extends LitElement {
       const action = slot.actions?.[0];
       const shortLabel = action ? formatActionDisplay(action, this.hass, this.config.customize, true) : '';
       const actionLabel = shortLabel || action?.service?.split('.').pop() || '';
-      return { start, end, widthPct, isActive, actionLabel, hasAction: !!slot.actions?.length };
+      const color = slot.color || (slot.actions?.length ? COLORS[i % COLORS.length] : undefined);
+      return { start, end, widthPct, isActive, actionLabel, hasAction: !!slot.actions?.length, color };
     });
 
     return html`
       <div class="timeline-wrap">
         <div class="timeline-bar">
           ${segments.map(
-            (seg, i) => html`
+            (seg) => html`
               <div
                 class="timeline-seg ${seg.isActive ? 'active' : ''} ${!seg.hasAction ? 'no-action' : ''}"
                 style="
                   width: ${seg.widthPct.toFixed(2)}%;
-                  background: ${seg.hasAction ? COLORS[i % COLORS.length] : 'var(--disabled-text-color, #9e9e9e)'};
+                  background: ${seg.color ?? 'var(--disabled-text-color, #9e9e9e)'};
                   ${seg.isActive
                   ? 'outline: 2px solid var(--primary-color); outline-offset: -2px; opacity: 1;'
                   : 'opacity: 0.72;'}
