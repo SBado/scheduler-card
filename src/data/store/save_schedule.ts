@@ -77,6 +77,7 @@ const parseTimeslot = (input: Timeslot): LegacyTimeslot => {
       : undefined,
     conditions: input.conditions.items.length ? input.conditions.items : undefined,
     track_conditions: input.conditions.track_changes,
+    color: input.color,
   };
 };
 
@@ -88,7 +89,7 @@ const parseAction = (input: Action): ServiceCall | ServiceCall[] => {
   };
 
   if (!input.target) {
-    let output: ServiceCall = {
+    const output: ServiceCall = {
       service: input.service,
       service_data: parseServiceData(input.service_data),
     };
@@ -101,11 +102,13 @@ const parseAction = (input: Action): ServiceCall | ServiceCall[] => {
     };
     return output;
   } else {
-    let output = input?.target.entity_id.map((e): ServiceCall => ({
-      service: input.service,
-      service_data: parseServiceData(input.service_data),
-      entity_id: e,
-    }));
+    let output = input?.target.entity_id.map(
+      (e): ServiceCall => ({
+        service: input.service,
+        service_data: parseServiceData(input.service_data),
+        entity_id: e,
+      })
+    );
     return output;
   }
 };
