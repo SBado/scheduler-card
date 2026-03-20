@@ -35,6 +35,7 @@ export interface Timeslot {
   stop?: string;
   actions: Action[];
   conditions: ConditionConfig;
+  color?: string;
 }
 
 export interface Schedule {
