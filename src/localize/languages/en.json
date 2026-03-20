@@ -132,6 +132,7 @@
         "repeated_days": "Repeated days",
         "start_time": "Start time",
         "stop_time": "End time",
+        "segment_color": "Segment color",
         "action": "Action",
         "add_action": "Add action",
         "select_timeslot": "Select a timeslot",
