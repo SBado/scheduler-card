@@ -36,6 +36,7 @@ export interface LegacyTimeslot {
   condition_type?: 'or' | 'and';
   track_conditions?: boolean;
   actions: ServiceCall[];
+  color?: string;
 }
 
 export type WeekdayType = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun' | 'workday' | 'weekend' | 'daily';
@@ -86,6 +87,7 @@ const parseTimeslot = (input: LegacyTimeslot): Timeslot => {
       items: input.conditions || [],
       track_changes: Boolean(input.track_conditions),
     },
+    color: input.color,
   };
 };
 const parseWeekdays = (input: WeekdayType): TWeekday => {
