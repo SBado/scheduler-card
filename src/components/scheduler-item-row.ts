@@ -109,6 +109,12 @@ export class SchedulerItemRow extends LitElement {
       return { start, end, widthPct, isActive, actionLabel, hasAction: !!slot.actions?.length, color };
     });
 
+    const fmtTime = (mins: number): string => {
+      const h = Math.floor(mins / 60) % 24;
+      const m = mins % 60;
+      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    };
+
     return html`
       <div class="timeline-wrap">
         <div class="timeline-bar">
@@ -119,9 +125,7 @@ export class SchedulerItemRow extends LitElement {
                 style="
                   width: ${seg.widthPct.toFixed(2)}%;
                   background: ${seg.color ?? 'var(--disabled-text-color, #9e9e9e)'};
-                  ${seg.isActive
-                  ? 'outline: 2px solid var(--primary-color); outline-offset: -2px; opacity: 1;'
-                  : 'opacity: 0.72;'}
+                  ${seg.isActive ? 'outline: 2px solid var(--primary-color); outline-offset: -2px;' : ''}
                 "
                 title="${slot_label(seg.actionLabel, seg.start, seg.end)}"
               >
@@ -132,11 +136,12 @@ export class SchedulerItemRow extends LitElement {
           ${isToday && !disabled ? html`<div class="timeline-now" style="left: ${nowPct.toFixed(2)}%"></div>` : nothing}
         </div>
         <div class="timeline-labels">
-          <span>00:00</span>
-          <span>06:00</span>
-          <span>12:00</span>
-          <span>18:00</span>
-          <span>24:00</span>
+          ${segments.map(
+            (seg) => html`
+              <span style="width: ${seg.widthPct.toFixed(2)}%; text-align: left;"> ${fmtTime(seg.start)} </span>
+            `
+          )}
+          <span style="margin-left: auto; text-align: right;"> ${fmtTime(segments[segments.length - 1].end)} </span>
         </div>
       </div>
     `;
@@ -280,7 +285,7 @@ export class SchedulerItemRow extends LitElement {
         position: relative;
         display: flex;
         width: 100%;
-        height: 18px;
+        height: 36px;
         border-radius: 4px;
         overflow: hidden;
       }
@@ -289,7 +294,7 @@ export class SchedulerItemRow extends LitElement {
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 10px;
+        font-size: 12px;
         font-weight: 500;
         color: #fff;
         overflow: hidden;
