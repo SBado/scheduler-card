@@ -73,19 +73,17 @@ export class SchedulerTimePicker extends LitElement {
           ${this.label ? html`<span class="label">${this.label}</span>` : nothing}
           ${this.large ? nothing : this._renderTimeMode()}
           <div class="hours">
-            ${
-              this.large
-                ? html`
-                    <ha-button
-                      appearance="plain"
-                      @click=${() => this._addTimeOffset({ hours: 1 })}
-                      ?disabled=${this.mode != TimeMode.Fixed && this.hours == MAX_OFFFSET_HOURS}
-                    >
-                      <ha-icon icon="mdi:chevron-up"></ha-icon>
-                    </ha-button>
-                  `
-                : nothing
-            }
+            ${this.large
+              ? html`
+                  <ha-button
+                    appearance="plain"
+                    @click=${() => this._addTimeOffset({ hours: 1 })}
+                    ?disabled=${this.mode != TimeMode.Fixed && this.hours == MAX_OFFFSET_HOURS}
+                  >
+                    <ha-icon icon="mdi:chevron-up"></ha-icon>
+                  </ha-button>
+                `
+              : nothing}
             <ha-input
               id="hour"
               inputmode="numeric"
@@ -103,35 +101,31 @@ export class SchedulerTimePicker extends LitElement {
               .validityTransform=${_validateHourInput}
             >
             </ha-input>
-            ${
-              this.large
-                ? html`
-                    <ha-button
-                      appearance="plain"
-                      @click=${() => this._addTimeOffset({ hours: -1 })}
-                      ?disabled=${this.mode != TimeMode.Fixed && this.hours == -MAX_OFFFSET_HOURS}
-                    >
-                      <ha-icon icon="mdi:chevron-down"></ha-icon>
-                    </ha-button>
-                  `
-                : nothing
-            }
+            ${this.large
+              ? html`
+                  <ha-button
+                    appearance="plain"
+                    @click=${() => this._addTimeOffset({ hours: -1 })}
+                    ?disabled=${this.mode != TimeMode.Fixed && this.hours == -MAX_OFFFSET_HOURS}
+                  >
+                    <ha-icon icon="mdi:chevron-down"></ha-icon>
+                  </ha-button>
+                `
+              : nothing}
           </div>
           <div class="time-separator">:</div>
           <div class="minutes">
-            ${
-              this.large
-                ? html`
-                    <ha-button
-                      appearance="plain"
-                      @click=${() => this._addTimeOffset({ minutes: this.stepSize })}
-                      ?disabled=${this.mode != TimeMode.Fixed && this.hours == MAX_OFFFSET_HOURS}
-                    >
-                      <ha-icon icon="mdi:chevron-up"></ha-icon>
-                    </ha-button>
-                  `
-                : nothing
-            }
+            ${this.large
+              ? html`
+                  <ha-button
+                    appearance="plain"
+                    @click=${() => this._addTimeOffset({ minutes: this.stepSize })}
+                    ?disabled=${this.mode != TimeMode.Fixed && this.hours == MAX_OFFFSET_HOURS}
+                  >
+                    <ha-icon icon="mdi:chevron-up"></ha-icon>
+                  </ha-button>
+                `
+              : nothing}
             <ha-input
               id="min"
               inputmode="numeric"
@@ -149,19 +143,17 @@ export class SchedulerTimePicker extends LitElement {
               .validityTransform=${_validateMinuteInput}
             >
             </ha-input>
-            ${
-              this.large
-                ? html`
-                    <ha-button
-                      appearance="plain"
-                      @click=${() => this._addTimeOffset({ minutes: -this.stepSize })}
-                      ?disabled=${this.mode != TimeMode.Fixed && this.hours == -MAX_OFFFSET_HOURS}
-                    >
-                      <ha-icon icon="mdi:chevron-down"></ha-icon>
-                    </ha-button>
-                  `
-                : nothing
-            }
+            ${this.large
+              ? html`
+                  <ha-button
+                    appearance="plain"
+                    @click=${() => this._addTimeOffset({ minutes: -this.stepSize })}
+                    ?disabled=${this.mode != TimeMode.Fixed && this.hours == -MAX_OFFFSET_HOURS}
+                  >
+                    <ha-icon icon="mdi:chevron-down"></ha-icon>
+                  </ha-button>
+                `
+              : nothing}
           </div>
           ${this._renderSuffix()} ${this.large ? this._renderTimeMode() : nothing}
         </div>
@@ -184,19 +176,17 @@ export class SchedulerTimePicker extends LitElement {
 
       return html`
         <div class="mode">
-          ${
-            this.hass.states['sun.sun']
-              ? html`
-                  <ha-button
-                    appearance="${this.mode == TimeMode.Fixed ? 'plain' : 'accent'}"
-                    variant="${this.mode == TimeMode.Fixed ? 'neutral' : 'brand'}"
-                    @click=${_toggleTimeMode}
-                  >
-                    <ha-icon icon="mdi:theme-light-dark"></ha-icon>
-                  </ha-button>
-                `
-              : nothing
-          }
+          ${this.hass.states['sun.sun']
+            ? html`
+                <ha-button
+                  appearance="${this.mode == TimeMode.Fixed ? 'plain' : 'accent'}"
+                  variant="${this.mode == TimeMode.Fixed ? 'neutral' : 'brand'}"
+                  @click=${_toggleTimeMode}
+                >
+                  <ha-icon icon="mdi:theme-light-dark"></ha-icon>
+                </ha-button>
+              `
+            : nothing}
         </div>
       `;
     } else {
@@ -285,41 +275,35 @@ export class SchedulerTimePicker extends LitElement {
 
       return html`
         <div class="suffix">
-          ${
-            this.useAmPm && this.mode == TimeMode.Fixed
-              ? html`
-                  <ha-button appearance="plain" @click=${_toggleAmPmClick}>
-                    <span class="large"> ${convertTo12Hour(this.hours).am_pm == AmPmFormat.AM ? 'AM' : 'PM'} </span>
-                  </ha-button>
-                `
-              : nothing
-          }
-          ${
-            this.mode != TimeMode.Fixed
-              ? html`
-                  <ha-button appearance="plain" size="large" @click=${_toggleBeforeAfterClick}>
-                    <span class="large">
-                      ${
-                        this.hours < 0 || this.minutes < 0
-                          ? this.hass
-                              .localize('ui.panel.config.automation.editor.conditions.type.sun.before')
-                              .trim()
-                              .toLowerCase()
-                          : this.hass
-                              .localize('ui.panel.config.automation.editor.conditions.type.sun.after')
-                              .trim()
-                              .toLowerCase()
-                      }
-                    </span>
-                  </ha-button>
-                  <ha-button appearance="plain" @click=${_toggleSunriseSunsetClick}>
-                    <ha-icon
-                      icon="${this.mode == TimeMode.Sunrise ? 'mdi:weather-sunny' : 'mdi:weather-night'}"
-                    ></ha-icon>
-                  </ha-button>
-                `
-              : nothing
-          }
+          ${this.useAmPm && this.mode == TimeMode.Fixed
+            ? html`
+                <ha-button appearance="plain" @click=${_toggleAmPmClick}>
+                  <span class="large"> ${convertTo12Hour(this.hours).am_pm == AmPmFormat.AM ? 'AM' : 'PM'} </span>
+                </ha-button>
+              `
+            : nothing}
+          ${this.mode != TimeMode.Fixed
+            ? html`
+                <ha-button appearance="plain" size="large" @click=${_toggleBeforeAfterClick}>
+                  <span class="large">
+                    ${this.hours < 0 || this.minutes < 0
+                      ? this.hass
+                          .localize('ui.panel.config.automation.editor.conditions.type.sun.before')
+                          .trim()
+                          .toLowerCase()
+                      : this.hass
+                          .localize('ui.panel.config.automation.editor.conditions.type.sun.after')
+                          .trim()
+                          .toLowerCase()}
+                  </span>
+                </ha-button>
+                <ha-button appearance="plain" @click=${_toggleSunriseSunsetClick}>
+                  <ha-icon
+                    icon="${this.mode == TimeMode.Sunrise ? 'mdi:weather-sunny' : 'mdi:weather-night'}"
+                  ></ha-icon>
+                </ha-button>
+              `
+            : nothing}
         </div>
       `;
     } else {
