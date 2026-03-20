@@ -112,14 +112,25 @@ export class SchedulerTimeslotEditor extends LitElement {
       const rightMargin = i < slots.length - 1 ? 15 : 0;
       const slotWidth = slotWidths[i] - leftMargin - rightMargin;
       const nextSlot = slots[i + 1];
+      const hasColor = slot.actions.length && slot.color;
 
       return html`
         <div
           class="slot ${this.selectedSlot == i ? 'selected' : ''} ${slot.actions.length ? '' : 'empty'} ${slot.stop ===
           undefined
             ? 'short'
-            : ''}"
-          style="${styleMap({ width: `${slotWidths[i]}px` })}"
+            : ''} ${hasColor ? 'custom-color' : ''}"
+          style="${styleMap({
+            width: `${slotWidths[i]}px`,
+            ...(hasColor
+              ? {
+                  background: slot.color!,
+                  '--slot-custom-color': slot.color!,
+                  '--slot-custom-color-hover': slot.color! + 'dd',
+                  '--slot-custom-color-border': slot.color!,
+                }
+              : {}),
+          })}"
           @click=${this._toggleSelectTimeslot}
           idx="${i}"
         >
@@ -411,6 +422,16 @@ export class SchedulerTimeslotEditor extends LitElement {
       }
       .slot.empty .marker:hover {
         background: rgba(var(--rgb-secondary-text-color), 1);
+      }
+      .slot.custom-color {
+        background: var(--slot-custom-color) !important;
+      }
+      .slot.custom-color:hover {
+        filter: brightness(1.15);
+      }
+      .slot.custom-color.selected {
+        border: 3px solid var(--slot-custom-color-border) !important;
+        filter: brightness(1.15);
       }
       .handle {
         display: flex;
