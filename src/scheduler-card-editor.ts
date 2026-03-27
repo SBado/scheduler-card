@@ -133,6 +133,35 @@ export class SchedulerCardEditor extends LitElement {
           </div>
         </div>
 
+        <div class="two-columns" style="margin: 10px 0px 15px 0px">
+          <div class="column">
+            <ha-formfield label="${localize('ui.panel.card_editor.fields.show_timeline.heading', this.hass)}">
+              <ha-switch
+                ?checked=${this._config.show_timeline}
+                @change=${(ev: Event) => {
+                  const checked = (ev.target as HTMLInputElement).checked;
+                  // When disabling timeline, also clear the icon option
+                  this._updateConfig({
+                    show_timeline: checked,
+                    hide_icon: checked ? this._config.hide_icon : false,
+                  });
+                }}
+              ></ha-switch>
+            </ha-formfield>
+          </div>
+          <div class="column">
+            <ha-formfield label="${localize('ui.panel.card_editor.fields.hide_icon.heading', this.hass)}">
+              <ha-switch
+                ?checked=${this._config.hide_icon}
+                ?disabled=${!this._config.show_timeline}
+                @change=${(ev: Event) => {
+                  this._updateConfig({ hide_icon: (ev.target as HTMLInputElement).checked });
+                }}
+              ></ha-switch>
+            </ha-formfield>
+          </div>
+        </div>
+
         <scheduler-settings-row>
           <span slot="heading">${localize('ui.panel.card_editor.fields.time_step.heading', this.hass)}</span>
 

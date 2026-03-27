@@ -18,6 +18,8 @@ export interface CardConfig {
   exclude_tags?: string[] | string;
   show_add_button?: boolean;
   today_only?: boolean;
+  show_timeline?: boolean;
+  hide_icon?: boolean;
 }
 
 export enum EditorMode {
