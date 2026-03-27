@@ -115,6 +115,22 @@ export class SchedulerItemRow extends LitElement {
       return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
     };
 
+    const contrastColor = (color: string | undefined): 'black' | 'white' => {
+      if (!color) return 'white';
+      const hexMatch = color.match(/^#([0-9a-fA-F]{6})$/);
+      if (!hexMatch) return 'white';
+      const hex = hexMatch[1];
+      const r = parseInt(hex.slice(0, 2), 16);
+      const g = parseInt(hex.slice(2, 4), 16);
+      const b = parseInt(hex.slice(4, 6), 16);
+      const toLinear = (c: number) => {
+        const s = c / 255;
+        return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+      };
+      const L = 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+      return L > 0.179 ? 'black' : 'white';
+    };
+
     return html`
       <div class="timeline-wrap">
         <div class="timeline-bar">
@@ -125,11 +141,12 @@ export class SchedulerItemRow extends LitElement {
                 style="
                   width: ${seg.widthPct.toFixed(2)}%;
                   background: ${seg.color ?? 'var(--disabled-text-color, #9e9e9e)'};
+                  color: ${contrastColor(seg.color)};
                   ${seg.isActive ? 'outline: 2px solid var(--primary-color); outline-offset: -2px;' : ''}
                 "
                 title="${slot_label(seg.actionLabel, seg.start, seg.end)}"
               >
-                ${seg.widthPct > 9 ? seg.actionLabel : ''}
+                ${seg.widthPct > 4 ? seg.actionLabel : ''}
               </div>
             `
           )}
