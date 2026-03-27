@@ -39,7 +39,13 @@ export class SchedulerItemRow extends LitElement {
       if (hasRemovedEntity) icon = 'mdi:help';
 
       return html`
-        <ha-icon icon="${icon}" @click=${this._handleIconClick} class="${disabled ? 'disabled' : ''}"></ha-icon>
+        ${this.config.show_timeline && this.config.hide_icon
+          ? nothing
+          : html`<ha-icon
+              icon="${icon}"
+              @click=${this._handleIconClick}
+              class="${disabled ? 'disabled' : ''}"
+            ></ha-icon>`}
 
         <div
           class="info ${disabled ? 'disabled' : ''} ${hasRemovedEntity ? 'defective' : ''}"

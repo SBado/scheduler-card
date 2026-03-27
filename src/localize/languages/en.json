@@ -240,6 +240,14 @@
             "heading": "Today only",
             "description": "Only show today's schedules"
           },
+         "show_timeline": {
+            "heading": "Show timeline",
+            "description": "Show a 24h timeline bar for time scheme schedules"
+          },
+          "hide_icon": {
+            "heading": "Hide icon with timeline",
+            "description": "Hide the action icon on the left to give more space to the timeline"
+          },
           "tags": {
             "heading": "Tags",
             "description": "Use tags to divide schedules between multiple cards"
