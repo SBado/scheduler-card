@@ -71,42 +71,7 @@ export class SchedulerMainPanel extends LitElement {
 
   private _toHex(color: string): string {
     if (!color) return this._defaultSlotColor();
-
-    if (/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(color)) {
-      if (color.length === 4) {
-        return '#' + color[1] + color[1] + color[2] + color[2] + color[3] + color[3];
-      }
-      return color;
-    }
-
-    const rgbMatch = color.match(/^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/);
-    if (rgbMatch) {
-      return (
-        '#' + [rgbMatch[1], rgbMatch[2], rgbMatch[3]].map((n) => parseInt(n).toString(16).padStart(2, '0')).join('')
-      );
-    }
-
-    const hslMatch = color.match(/^hsl\(\s*(\d{1,3})\s*,\s*(\d{1,3})%\s*,\s*(\d{1,3})%\s*\)$/);
-    if (hslMatch) {
-      const h = parseInt(hslMatch[1]) / 360;
-      const s = parseInt(hslMatch[2]) / 100;
-      const l = parseInt(hslMatch[3]) / 100;
-      const hue2rgb = (p: number, q: number, t: number) => {
-        if (t < 0) t += 1;
-        if (t > 1) t -= 1;
-        if (t < 1 / 6) return p + (q - p) * 6 * t;
-        if (t < 1 / 2) return q;
-        if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-        return p;
-      };
-      const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-      const p = 2 * l - q;
-      const r = Math.round(hue2rgb(p, q, h + 1 / 3) * 255);
-      const g = Math.round(hue2rgb(p, q, h) * 255);
-      const b = Math.round(hue2rgb(p, q, h - 1 / 3) * 255);
-      return '#' + [r, g, b].map((n) => n.toString(16).padStart(2, '0')).join('');
-    }
-
+    if (/^#[0-9a-fA-F]{6}$/.test(color)) return color;
     return this._defaultSlotColor();
   }
 
@@ -238,24 +203,17 @@ export class SchedulerMainPanel extends LitElement {
 
     const currentColor = slot.color || '';
 
-    const isValidColor = (v: string): boolean => {
-      // hex:  #rgb  #rrggbb
-      if (/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(v)) return true;
-      // rgb:  rgb(0,0,0)  rgb(0, 0, 0)  also with spaces
-      if (/^rgb\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*\)$/.test(v)) return true;
-      // hsl:  hsl(360,100%,50%)  hsl(360, 100%, 50%)
-      if (/^hsl\(\s*\d{1,3}\s*,\s*\d{1,3}%\s*,\s*\d{1,3}%\s*\)$/.test(v)) return true;
-      return false;
-    };
+    const isValidHex = (v: string) => /^#[0-9a-fA-F]{6}$/.test(v);
 
     const onColorPickerChange = (ev: Event) => {
-      const val = (ev.target as HTMLInputElement).value;
-      this._updateSlot({ color: val });
+      const hex = (ev.target as HTMLInputElement).value;
+      this._updateSlot({ color: hex });
     };
 
-    const onTextInputChange = (ev: Event) => {
-      const val = (ev.target as HTMLInputElement).value.trim();
-      if (isValidColor(val)) this._updateSlot({ color: val });
+    const onHexInputChange = (ev: Event) => {
+      let val = (ev.target as HTMLInputElement).value.trim();
+      if (!val.startsWith('#')) val = '#' + val;
+      if (isValidHex(val)) this._updateSlot({ color: val });
     };
 
     const onCopy = () => {
@@ -266,7 +224,7 @@ export class SchedulerMainPanel extends LitElement {
       try {
         const text = (await navigator.clipboard.readText()).trim();
         const hex = text.startsWith('#') ? text : '#' + text;
-        if (isValidColor(hex)) this._updateSlot({ color: hex });
+        if (isValidHex(hex)) this._updateSlot({ color: hex });
       } catch (_) {}
     };
 
@@ -313,11 +271,11 @@ export class SchedulerMainPanel extends LitElement {
                 />
                 <input
                   type="text"
-                  class="color-text"
+                  class="color-hex"
                   .value=${currentColor}
-                  placeholder="#rrggbb / rgb() / hsl()"
-                  maxlength="32"
-                  @change=${onTextInputChange}
+                  placeholder="#rrggbb"
+                  maxlength="7"
+                  @change=${onHexInputChange}
                 />
                 <ha-icon-button
                   .path=${mdiContentCopy}
@@ -738,7 +696,7 @@ export class SchedulerMainPanel extends LitElement {
         background: none;
         flex-shrink: 0;
       }
-      .color-text {
+      .color-hex {
         width: 160px;
         height: 36px;
         border: 1px solid var(--divider-color, #e0e0e0);
@@ -749,7 +707,7 @@ export class SchedulerMainPanel extends LitElement {
         background: var(--card-background-color, #fff);
         font-family: monospace;
       }
-      .color-text:focus {
+      .color-hex:focus {
         outline: none;
         border-color: var(--primary-color);
       }
