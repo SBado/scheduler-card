@@ -100,7 +100,6 @@ export class SchedulerItemRow extends LitElement {
 
     const now = new Date();
     const nowMins = now.getHours() * 60 + now.getMinutes();
-    const nowPct = (nowMins / TOTAL_MINS) * 100;
     const isToday = this.selectedDay === now.getDay();
 
     const segments = slots.map((slot, i) => {
@@ -114,6 +113,33 @@ export class SchedulerItemRow extends LitElement {
       const color = slot.color || (slot.actions?.length ? COLORS[i % COLORS.length] : undefined);
       return { start, end, widthPct, isActive, actionLabel, hasAction: !!slot.actions?.length, color };
     });
+
+    const MIN_SEGMENT_PX = 48;
+
+    // Compute the bar's required pixel width:
+    // for each segment, its natural width is widthPct/100 * containerWidth,
+    // but it must be at least MIN_SEGMENT_PX. The bar must be wide enough
+    // to accommodate all segments at their natural OR minimum size.
+    const barContainerEl = this.shadowRoot?.querySelector('.timeline-scroll');
+    const containerWidth = barContainerEl ? barContainerEl.getBoundingClientRect().width : 300;
+    const barWidth = segments.reduce(
+      (total, seg) => total + Math.max((seg.widthPct / 100) * containerWidth, MIN_SEGMENT_PX),
+      0
+    );
+    console.log('WIDTH: ' + containerWidth);
+
+    const segEffPxs = segments.map((seg) => Math.max((seg.widthPct / 100) * containerWidth, MIN_SEGMENT_PX));
+    let nowOffsetPx = 0;
+    for (let i = 0; i < segments.length; i++) {
+      const seg = segments[i];
+      if (nowMins >= seg.start && nowMins < seg.end) {
+        const fracWithinSeg = (nowMins - seg.start) / (seg.end - seg.start);
+        nowOffsetPx += fracWithinSeg * segEffPxs[i];
+        break;
+      }
+      nowOffsetPx += segEffPxs[i];
+    }
+    const nowPct = barWidth > 0 ? (nowOffsetPx / barWidth) * 100 : 0;
 
     const fmtTime = (mins: number): string => {
       const h = Math.floor(mins / 60) % 24;
@@ -139,32 +165,39 @@ export class SchedulerItemRow extends LitElement {
 
     return html`
       <div class="timeline-wrap">
-        <div class="timeline-bar">
-          ${segments.map(
-            (seg) => html`
-              <div
-                class="timeline-seg ${seg.isActive ? 'active' : ''} ${!seg.hasAction ? 'no-action' : ''}"
-                style="
+        <div class="timeline-scroll">
+          <div class="timeline-bar" style="width: ${barWidth.toFixed(1)}px;">
+            ${segments.map(
+              (seg) => html`
+                <div
+                  class="timeline-seg ${seg.isActive ? 'active' : ''} ${!seg.hasAction ? 'no-action' : ''}"
+                  style="
                   width: ${seg.widthPct.toFixed(2)}%;
+                  min-width: ${MIN_SEGMENT_PX}px;
                   background: ${seg.color ?? 'var(--disabled-text-color, #9e9e9e)'};
                   color: ${contrastColor(seg.color)};
                   ${seg.isActive ? 'outline: 2px solid var(--primary-color); outline-offset: -2px;' : ''}
                 "
-                title="${slot_label(seg.actionLabel, seg.start, seg.end)}"
-              >
-                ${seg.widthPct > 4 ? seg.actionLabel : ''}
-              </div>
-            `
-          )}
-          ${isToday && !disabled ? html`<div class="timeline-now" style="left: ${nowPct.toFixed(2)}%"></div>` : nothing}
-        </div>
-        <div class="timeline-labels">
-          ${segments.map(
-            (seg) => html`
-              <span style="width: ${seg.widthPct.toFixed(2)}%; text-align: left;"> ${fmtTime(seg.start)} </span>
-            `
-          )}
-          <span style="margin-left: auto; text-align: right;"> ${fmtTime(segments[segments.length - 1].end)} </span>
+                  title="${slot_label(seg.actionLabel, seg.start, seg.end)}"
+                >
+                  ${seg.widthPct > 4 ? seg.actionLabel : ''}
+                </div>
+              `
+            )}
+            ${isToday && !disabled
+              ? html`<div class="timeline-now" style="left: ${nowPct.toFixed(2)}%"></div>`
+              : nothing}
+          </div>
+          <div class="timeline-labels" style="width: ${barWidth.toFixed(1)}px;">
+            ${segments.map(
+              (seg) => html`
+                <span style="width: ${seg.widthPct.toFixed(2)}%; min-width: ${MIN_SEGMENT_PX}px; text-align: left;">
+                  ${fmtTime(seg.start)}
+                </span>
+              `
+            )}
+            <span style="margin-left: auto; text-align: right;"> ${fmtTime(segments[segments.length - 1].end)} </span>
+          </div>
         </div>
       </div>
     `;
@@ -231,10 +264,6 @@ export class SchedulerItemRow extends LitElement {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-      }
-      .timeline-wrap {
-        white-space: normal;
-        overflow: visible;
       }
       .flex ::slotted(*) {
         margin-left: 8px;
@@ -304,13 +333,22 @@ export class SchedulerItemRow extends LitElement {
         flex-direction: column;
         gap: 3px;
       }
+      .timeline-scroll {
+        overflow-x: auto;
+        overflow-y: visible;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+      .timeline-scroll::-webkit-scrollbar {
+        display: none;
+      }
       .timeline-bar {
         position: relative;
         display: flex;
         width: 100%;
         height: 36px;
         border-radius: 4px;
-        overflow: hidden;
+        overflow: visible;
       }
       .timeline-seg {
         height: 100%;
