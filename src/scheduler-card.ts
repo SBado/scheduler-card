@@ -480,6 +480,18 @@ export class SchedulerCard extends LitElement {
     .card-actions > * {
       display: flex;
     }
+    @media (max-width: 600px) {
+      :host {
+        --ha-card-border-radius: 0px;
+      }
+      ha-card {
+        border-radius: 0px;
+      }
+      .card-content {
+        padding-left: 0px;
+        padding-right: 0px;
+      }
+    }
   `;
 }
 
